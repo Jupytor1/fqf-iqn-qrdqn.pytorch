@@ -14,13 +14,13 @@ target_update_interval: 10000
 start_steps: 50000
 epsilon_train: 0.01
 epsilon_eval: 0.001
-epsilon_decay_steps: 250000  # It equals to 1M frames.
+epsilon_decay_steps: 1000000 # Changed for 2048
 double_q_learning: True
 dueling_net: True
 noisy_net: True
 use_per: True
 log_interval: 100
-eval_interval: 250000
-num_eval_steps: 125000  # It equals to 500k frames.
+eval_interval: 20000 # Changed for 2048
+num_eval_steps: 50000 # Changed for 2048
 max_episode_steps: 27000
 grad_cliping:

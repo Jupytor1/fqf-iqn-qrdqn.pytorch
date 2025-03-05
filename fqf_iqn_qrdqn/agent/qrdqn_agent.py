@@ -6,6 +6,8 @@ from fqf_iqn_qrdqn.utils import calculate_quantile_huber_loss, disable_gradients
 
 from .base_agent import BaseAgent
 
+import fqf_iqn_qrdqn.myconst as myconst
+
 
 class QRDQNAgent(BaseAgent):
 
@@ -29,11 +31,13 @@ class QRDQNAgent(BaseAgent):
 
         # Online network.
         self.online_net = QRDQN(
+            embedding_dim=myconst.SIZE*myconst.SIZE*64, # Added for 2048
             num_channels=env.observation_space.shape[0],
             num_actions=self.num_actions, N=N, dueling_net=dueling_net,
             noisy_net=noisy_net).to(self.device)
         # Target network.
         self.target_net = QRDQN(
+            embedding_dim=myconst.SIZE*myconst.SIZE*64, # Added for 2048
             num_channels=env.observation_space.shape[0],
             num_actions=self.num_actions, N=N, dueling_net=dueling_net,
             noisy_net=noisy_net).to(self.device).to(self.device)
@@ -81,10 +85,14 @@ class QRDQNAgent(BaseAgent):
             self.memory.update_priority(errors)
 
         if 4*self.steps % self.log_interval == 0:
+            # self.writer.add_scalar(
+            #     'loss/quantile_loss', quantile_loss.detach().item(),
+            #     4*self.steps)
             self.writer.add_scalar(
                 'loss/quantile_loss', quantile_loss.detach().item(),
-                4*self.steps)
-            self.writer.add_scalar('stats/mean_Q', mean_q, 4*self.steps)
+                self.steps)
+            # self.writer.add_scalar('stats/mean_Q', mean_q, 4*self.steps)
+            self.writer.add_scalar('stats/mean_Q', mean_q, self.steps)
 
     def calculate_loss(self, states, actions, rewards, next_states, dones,
                        weights):

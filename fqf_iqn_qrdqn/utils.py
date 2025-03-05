@@ -84,7 +84,7 @@ class RunningMeanStats:
         return np.mean(self.stats)
 
 
-class LinearAnneaer:
+class LinearAnnealer:
 
     def __init__(self, start_value, end_value, num_steps):
         assert num_steps > 0 and isinstance(num_steps, int)

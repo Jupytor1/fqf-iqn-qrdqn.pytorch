@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from fqf_iqn_qrdqn.memory import LazyMultiStepMemory, \
     LazyPrioritizedMultiStepMemory
-from fqf_iqn_qrdqn.utils import RunningMeanStats, LinearAnneaer
+from fqf_iqn_qrdqn.utils import RunningMeanStats, LinearAnnealer
 
 
 class BaseAgent(ABC):
@@ -76,7 +76,7 @@ class BaseAgent(ABC):
         self.num_eval_steps = num_eval_steps
         self.gamma_n = gamma ** multi_step
         self.start_steps = start_steps
-        self.epsilon_train = LinearAnneaer(
+        self.epsilon_train = LinearAnnealer(
             1.0, epsilon_train, epsilon_decay_steps)
         self.epsilon_eval = epsilon_eval
         self.update_interval = update_interval
@@ -115,8 +115,10 @@ class BaseAgent(ABC):
 
     def exploit(self, state):
         # Act without randomness.
+        # state = torch.ByteTensor(
+        #     state).unsqueeze(0).to(self.device).float() / 255.
         state = torch.ByteTensor(
-            state).unsqueeze(0).to(self.device).float() / 255.
+            state).unsqueeze(0).to(self.device).float()
         with torch.no_grad():
             action = self.online_net.calculate_q(states=state).argmax().item()
         return action
@@ -180,8 +182,10 @@ class BaseAgent(ABC):
 
         # We log evaluation results along with training frames = 4 * steps.
         if self.episodes % self.log_interval == 0:
+            # self.writer.add_scalar(
+            #     'return/train', self.train_return.get(), 4 * self.steps)
             self.writer.add_scalar(
-                'return/train', self.train_return.get(), 4 * self.steps)
+                'return/train', self.train_return.get(), self.steps)
 
         print(f'Episode: {self.episodes:<4}  '
               f'episode steps: {episode_steps:<4}  '
@@ -237,8 +241,10 @@ class BaseAgent(ABC):
             self.save_models(os.path.join(self.model_dir, 'best'))
 
         # We log evaluation results along with training frames = 4 * steps.
+        # self.writer.add_scalar(
+        #     'return/test', mean_return, 4 * self.steps)
         self.writer.add_scalar(
-            'return/test', mean_return, 4 * self.steps)
+            'return/test', mean_return, self.steps)
         print('-' * 60)
         print(f'Num steps: {self.steps:<5}  '
               f'return: {mean_return:<5.1f}')

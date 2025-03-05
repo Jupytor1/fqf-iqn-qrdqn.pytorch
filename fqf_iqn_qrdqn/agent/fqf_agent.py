@@ -6,6 +6,8 @@ from fqf_iqn_qrdqn.utils import calculate_quantile_huber_loss, disable_gradients
 
 from .base_agent import BaseAgent
 
+import fqf_iqn_qrdqn.myconst as myconst
+
 
 class FQFAgent(BaseAgent):
 
@@ -30,12 +32,14 @@ class FQFAgent(BaseAgent):
 
         # Online network.
         self.online_net = FQF(
+            embedding_dim=myconst.SIZE*myconst.SIZE*64, # Added for 2048
             num_channels=env.observation_space.shape[0],
             num_actions=self.num_actions, N=N,
             num_cosines=num_cosines, dueling_net=dueling_net,
             noisy_net=noisy_net).to(self.device)
         # Target network.
         self.target_net = FQF(
+            embedding_dim=myconst.SIZE*myconst.SIZE*64, # Added for 2048
             num_channels=env.observation_space.shape[0],
             num_actions=self.num_actions, N=N,
             num_cosines=num_cosines, dueling_net=dueling_net,
@@ -132,21 +136,34 @@ class FQFAgent(BaseAgent):
             self.memory.update_priority(errors)
 
         if self.learning_steps % self.log_interval == 0:
+            # self.writer.add_scalar(
+            #     'loss/fraction_loss', fraction_loss.detach().item(),
+            #     4*self.steps)
             self.writer.add_scalar(
                 'loss/fraction_loss', fraction_loss.detach().item(),
-                4*self.steps)
+                self.steps)
+            # self.writer.add_scalar(
+            #     'loss/quantile_loss', quantile_loss.detach().item(),
+            #     4*self.steps)
             self.writer.add_scalar(
                 'loss/quantile_loss', quantile_loss.detach().item(),
-                4*self.steps)
+                self.steps)
             if self.ent_coef > 0.0:
+                # self.writer.add_scalar(
+                #     'loss/entropy_loss', entropy_loss.detach().item(),
+                #     4*self.steps)
                 self.writer.add_scalar(
                     'loss/entropy_loss', entropy_loss.detach().item(),
-                    4*self.steps)
+                    self.steps)
 
-            self.writer.add_scalar('stats/mean_Q', mean_q, 4*self.steps)
+            # self.writer.add_scalar('stats/mean_Q', mean_q, 4*self.steps)
+            self.writer.add_scalar('stats/mean_Q', mean_q, self.steps)
+            # self.writer.add_scalar(
+            #     'stats/mean_entropy_of_value_distribution',
+            #     entropies.mean().detach().item(), 4*self.steps)
             self.writer.add_scalar(
                 'stats/mean_entropy_of_value_distribution',
-                entropies.mean().detach().item(), 4*self.steps)
+                entropies.mean().detach().item(), self.steps)
 
     def calculate_fraction_loss(self, state_embeddings, sa_quantile_hats, taus,
                                 actions, weights):
